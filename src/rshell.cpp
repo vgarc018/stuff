@@ -24,26 +24,23 @@ typedef tokenizer<char_separator<char> > mytok;
 template <typename T>
 void print(vector<T> &s)
 {
-  for(auto i = 0; i <= s.size(); ++i)
-  {
+  for(auto i = 0; i < s.size(); ++i)
     cout << "v[" << i << "] =  " << s[i] << endl;  
-  }
 }
 
 void connectors(string s, queue<string> &c)
 {
-  for(auto i = 0; i < s.size(); ++i)
+  for(auto i = 0; i < s.size(); i++)
   {
     if(s[i] == '|' && s[i+1] == '|')
     {
       c.push("||");
     }
-    if(s[i] == ';')
+    else if(s[i] == ';')
     {
       c.push(";");
     }
-
-    if(s[i] == '&' && s[i+1] == '&')
+    else if(s[i] == '&' && s[i+1] == '&')
     {
       c.push("&&");
     }
@@ -52,9 +49,10 @@ void connectors(string s, queue<string> &c)
 template <typename T>
 void qprint(queue<T> &c)
 {
-  for(auto i = 0; i < c.size(); i++)
+  while(!c.empty())
   {
-    cout << "c[ " << i << "] = " << c.front() << endl;
+    string s = c.front();
+    cout << "c[  ]" << s << endl;
     c.pop();
   }
 }
