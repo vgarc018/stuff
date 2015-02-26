@@ -67,6 +67,13 @@ void parsing(string s, vector<string> &v)
   }
 }
 
+void execvp_connectors(string s)
+{
+  char_separator<char> space(" ");
+  mytok tok (s, space);
+  for();
+}
+
 
 int main()
 {
