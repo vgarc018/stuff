@@ -107,17 +107,23 @@ int execvp_connectors(string s)
  // print(cmds);
   print(paths);
   
-  char** cm = static_cast<(char*)>[cmds.size()+1];
-  size_t k = 0;
-  for(auto i = 0; i < cmds.size(); ++i)
+  char *cm[cmds.size()+1];
+  if(cmds.size() != 0)
   {
-    string temp = cmds[i];
-    cm[k] = new char[temp.size()];
-    strcpy(cm[k], temp.c_str());
-    k++;
+    size_t k = 0;
+    for(auto i = 0; i < cmds.size(); ++i)
+    {
+      string temp = cmds[i];
+      //cm[k] = char[temp.size()];
+      strcpy(cm[k], temp.c_str());
+      k++;
+    }
+    cm[k] = NULL;
   }
-  cm[k] = NULL;
-
+  else
+  {
+   strcpy(cm[0], NULL); 
+  }
   size_t pid = fork();
   size_t err = -1;
   if(pid == err)
@@ -139,6 +145,10 @@ int execvp_connectors(string s)
   }
   else
   {
+   /* for(unsigned int i = 0; i <= cmds.size(); ++i)
+    {
+      delete cmds[i];
+    }*/
     int x;
     if(wait(&x) == -1)
     {
