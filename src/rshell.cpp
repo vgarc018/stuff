@@ -15,6 +15,7 @@
 #include <istream>
 #include <queue>
 #include <cstdio>
+#include <string.h>
 
 using namespace std;
 using namespace boost;
@@ -24,13 +25,13 @@ typedef tokenizer<char_separator<char> > mytok;
 template <typename T>
 void print(vector<T> &s)
 {
-  for(auto i = 0; i < s.size(); ++i)
+  for(unsigned int i = 0; i < s.size(); ++i)
     cout << "v[" << i << "] =  " << s[i] << endl;  
 }
 
 void connectors(string s, queue<string> &c)
 {
-  for(auto i = 0; i < s.size(); i++)
+  for(unsigned int i = 0; i < s.size(); i++)
   {
     if(s[i] == '|' && s[i+1] == '|')
     {
@@ -61,7 +62,7 @@ void parsing(string s, vector<string> &v)
 {
   char_separator<char> connector(";||&&");
   mytok tok (s, connector);
-  for(auto i = tok.begin(); i != tok.end(); ++i)
+  for(mytok::iterator i = tok.begin(); i != tok.end(); ++i)
   {
     v.push_back(*i);
   }
@@ -69,7 +70,7 @@ void parsing(string s, vector<string> &v)
 template <typename T>
 void cat (vector<T> &s, string cmd)
 {
-  for(auto i = 0; i < s.size(); i++)
+  for(unsigned int i = 0; i < s.size(); i++)
   {
     string temp = s[i] + "/" + cmd;
     s[i] = temp;
@@ -89,14 +90,14 @@ int execvp_connectors(string s)
   char_separator<char> colon(":");
   mytok tok (path_str, colon);
   vector<string> paths;
-  for(auto i =tok.begin(); i != tok.end(); ++i)
+  for(mytok::iterator i =tok.begin(); i != tok.end(); ++i)
   {
     paths.push_back(*i);
   }
   vector<string> cmds;
   char_separator<char> space (" ");
   mytok cmd_toks(s, space);
-  for(auto i = cmd_toks.begin(); i != cmd_toks.end(); ++i)
+  for(mytok::iterator i = cmd_toks.begin(); i != cmd_toks.end(); ++i)
   {
    cmds.push_back(*i);
   }
@@ -107,14 +108,14 @@ int execvp_connectors(string s)
  // print(cmds);
   print(paths);
   
-  char *cm[cmds.size()+1];
+  char **cm;
   if(cmds.size() != 0)
   {
     size_t k = 0;
-    for(auto i = 0; i < cmds.size(); ++i)
+    for(unsigned int i = 0; i < cmds.size(); ++i)
     {
       string temp = cmds[i];
-      //cm[k] = char[temp.size()];
+      cm[k] = new char[temp.size()];
       strcpy(cm[k], temp.c_str());
       k++;
     }
@@ -122,7 +123,7 @@ int execvp_connectors(string s)
   }
   else
   {
-   strcpy(cm[0], NULL); 
+   cm[0]= NULL; 
   }
   size_t pid = fork();
   size_t err = -1;
@@ -133,7 +134,7 @@ int execvp_connectors(string s)
   if(pid == 0)
   {
       int exec;
-      for(auto i = 0; i < paths.size(); ++i)
+      for(unsigned int i = 0; i < paths.size(); ++i)
       {
         exec = execv(paths[i].c_str(), cm);
       }
@@ -157,6 +158,7 @@ int execvp_connectors(string s)
     }
     return x;
   }
+  return 6;
 }
 
 
