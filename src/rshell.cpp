@@ -75,7 +75,8 @@ void cat (vector<T> &s, string cmd)
     s[i] = temp;
   }
 }
-void execvp_connectors(string s)
+
+int execvp_connectors(string s)
 {
   const char *path_name = "PATH";
   char *path = getenv(path_name);
@@ -92,9 +93,60 @@ void execvp_connectors(string s)
   {
     paths.push_back(*i);
   }
-  cat(paths, s);
+  vector<string> cmds;
+  char_separator<char> space (" ");
+  mytok cmd_toks(s, space);
+  for(auto i = cmd_toks.begin(); i != cmd_toks.end(); ++i)
+  {
+   cmds.push_back(*i);
+  }
+  cat(paths, cmds[0]);
   sort(paths.begin(), paths.end());
+  //print(cmds);
+  cmds.erase(cmds.begin());
+ // print(cmds);
   print(paths);
+  
+  char** cm = static_cast<(char*)>[cmds.size()+1];
+  size_t k = 0;
+  for(auto i = 0; i < cmds.size(); ++i)
+  {
+    string temp = cmds[i];
+    cm[k] = new char[temp.size()];
+    strcpy(cm[k], temp.c_str());
+    k++;
+  }
+  cm[k] = NULL;
+
+  size_t pid = fork();
+  size_t err = -1;
+  if(pid == err)
+  {
+    perror("fork Error");
+  }
+  if(pid == 0)
+  {
+      int exec;
+      for(auto i = 0; i < paths.size(); ++i)
+      {
+        exec = execv(paths[i].c_str(), cm);
+      }
+      if(exec == -1)
+      {
+        perror("error in Execv");
+        exit(1);
+      }
+  }
+  else
+  {
+    int x;
+    if(wait(&x) == -1)
+    {
+      perror("Error in wait");
+      exit(1);
+    }
+    return x;
+  }
 }
 
 
