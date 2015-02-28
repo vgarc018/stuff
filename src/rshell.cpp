@@ -21,17 +21,18 @@ using namespace std;
 using namespace boost;
 
 typedef tokenizer<char_separator<char> > mytok;
+typedef mytok::iterator tok_it;
 
 template <typename T>
 void print(vector<T> &s)
 {
-  for(unsigned int i = 0; i < s.size(); ++i)
+  for(size_t i = 0; i < s.size(); ++i)
     cout << "v[" << i << "] =  " << s[i] << endl;  
 }
 
 void connectors(string s, queue<string> &c)
 {
-  for(unsigned int i = 0; i < s.size(); i++)
+  for(size_t i = 0; i < s.size(); i++)
   {
     if(s[i] == '|' && s[i+1] == '|')
     {
@@ -62,7 +63,7 @@ void parsing(string s, vector<string> &v)
 {
   char_separator<char> connector(";||&&");
   mytok tok (s, connector);
-  for(mytok::iterator i = tok.begin(); i != tok.end(); ++i)
+  for(tok_it i = tok.begin(); i != tok.end(); ++i)
   {
     v.push_back(*i);
   }
@@ -70,7 +71,7 @@ void parsing(string s, vector<string> &v)
 template <typename T>
 void cat (vector<T> &s, string cmd)
 {
-  for(unsigned int i = 0; i < s.size(); i++)
+  for(size_t i = 0; i < s.size(); i++)
   {
     string temp = s[i] + "/" + cmd;
     s[i] = temp;
@@ -90,29 +91,29 @@ int execvp_connectors(string s)
   char_separator<char> colon(":");
   mytok tok (path_str, colon);
   vector<string> paths;
-  for(mytok::iterator i =tok.begin(); i != tok.end(); ++i)
+  for(tok_it i =tok.begin(); i != tok.end(); ++i)
   {
     paths.push_back(*i);
   }
   vector<string> cmds;
   char_separator<char> space (" ");
   mytok cmd_toks(s, space);
-  for(mytok::iterator i = cmd_toks.begin(); i != cmd_toks.end(); ++i)
+  for(tok_it i = cmd_toks.begin(); i != cmd_toks.end(); ++i)
   {
    cmds.push_back(*i);
   }
   cat(paths, cmds[0]);
   sort(paths.begin(), paths.end());
   //print(cmds);
-  cmds.erase(cmds.begin());
+  //cmds.erase(cmds.begin());
  // print(cmds);
-  print(paths);
+ // print(paths);
   
   char **cm = (char**) malloc((cmds.size()+1) * sizeof(char*));
   if(cmds.size() != 0)
   {
     size_t k = 0;
-    for(unsigned int i = 0; i < cmds.size(); ++i)
+    for(size_t i = 0; i < cmds.size(); ++i)
     {
       string temp = cmds[i];
       cm[k] = (char*) malloc((cmds[i].size()+1) * sizeof(char));
@@ -120,10 +121,6 @@ int execvp_connectors(string s)
       k++;
     }
     cm[k] = NULL;
-  }
-  else
-  {
-   cm = NULL; 
   }
   size_t pid = fork();
   size_t err = -1;
@@ -134,8 +131,9 @@ int execvp_connectors(string s)
   if(pid == 0)
   {
       int exec;
-      for(unsigned int i = 0; i < paths.size(); ++i)
+      for(size_t i = 0; i < paths.size(); ++i)
       {
+        
         exec = execv(paths[i].c_str(), cm);
       }
       if(exec == -1)
@@ -146,10 +144,6 @@ int execvp_connectors(string s)
   }
   else
   {
-   /* for(unsigned int i = 0; i <= cmds.size(); ++i)
-    {
-      delete cmds[i];
-    }*/
     int x;
     if(wait(&x) == -1)
     {
@@ -165,14 +159,40 @@ int execvp_connectors(string s)
 int main()
 {
   string line;
-  vector<string> v;
-  getline(cin, line);
-  parsing(line, v);
-  //print(v);
-  queue<string> co;
-  connectors(line, co);
-  //qprint(co);
-  execvp_connectors(v[0]);
-  
+  while(1)
+  {
+    char dir[1000];
+    if(!getcwd(dir,1000)) perror("error in getwcd");
+    char *login = getlogin();
+    if(login == NULL) perror("Userlogin");
+    char host[200];
+    if(gethostname(host, 200) == -1) perror("hostname");
+
+    cout << dir << endl;
+    if(login) 
+      cout << login << "@" << host << "$ ";
+    else
+      cout << "$ ";
+
+    getline(cin, line);
+
+    size_t comment = line.find("#");
+    if(comment != string::npos)
+      line.erase(line.find("#"));
+    if(line == "exit")
+    {
+      cout << "Thanks for using Rshell" << endl;
+      exit(0);
+    }
+    vector<string> v;
+    parsing(line, v);
+    queue<string> co;
+    connectors(line, co);
+    if(v.size() == co.size())
+    {
+
+    }
+    execvp_connectors(v[0]);
+  }
   return 0;
 }
