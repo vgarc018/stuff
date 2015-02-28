@@ -24,6 +24,58 @@ typedef tokenizer<char_separator<char> > mytok;
 typedef mytok::iterator tok_it;
 
 template <typename T>
+void print(vector<T> &s);
+void connectors(string s, queue<string> &c);
+template <typename T>
+void qprint(queue<T> &c);
+void parsing(string s, vector<string> &v);
+template <typename T>
+void cat (vector<T> &s, string cmd);
+int execvp_connectors(string s);
+
+
+int main()
+{
+  string line;
+  while(1)
+  {
+    char dir[1000];
+    if(!getcwd(dir,1000)) perror("error in getwcd");
+    char *login = getlogin();
+    if(login == NULL) perror("Userlogin");
+    char host[200];
+    if(gethostname(host, 200) == -1) perror("hostname");
+
+    cout << dir << endl;
+    if(login) 
+      cout << login << "@" << host << "$ ";
+    else
+      cout << "$ ";
+
+    getline(cin, line);
+
+    size_t comment = line.find("#");
+    if(comment != string::npos)
+      line.erase(line.find("#"));
+    if(line == "exit")
+    {
+      cout << "Thanks for using Rshell" << endl;
+      exit(0);
+    }
+    vector<string> v;
+    parsing(line, v);
+    queue<string> co;
+    connectors(line, co);
+    if(v.size() == co.size())
+    {
+
+    }
+    execvp_connectors(v[0]);
+  }
+  return 0;
+}
+
+template <typename T>
 void print(vector<T> &s)
 {
   for(size_t i = 0; i < s.size(); ++i)
@@ -156,43 +208,3 @@ int execvp_connectors(string s)
 }
 
 
-int main()
-{
-  string line;
-  while(1)
-  {
-    char dir[1000];
-    if(!getcwd(dir,1000)) perror("error in getwcd");
-    char *login = getlogin();
-    if(login == NULL) perror("Userlogin");
-    char host[200];
-    if(gethostname(host, 200) == -1) perror("hostname");
-
-    cout << dir << endl;
-    if(login) 
-      cout << login << "@" << host << "$ ";
-    else
-      cout << "$ ";
-
-    getline(cin, line);
-
-    size_t comment = line.find("#");
-    if(comment != string::npos)
-      line.erase(line.find("#"));
-    if(line == "exit")
-    {
-      cout << "Thanks for using Rshell" << endl;
-      exit(0);
-    }
-    vector<string> v;
-    parsing(line, v);
-    queue<string> co;
-    connectors(line, co);
-    if(v.size() == co.size())
-    {
-
-    }
-    execvp_connectors(v[0]);
-  }
-  return 0;
-}
