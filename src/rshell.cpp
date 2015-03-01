@@ -32,7 +32,7 @@ void parsing(string s, vector<string> &v);
 template <typename T>
 void cat (vector<T> &s, string cmd);
 int execvp_connectors(string s);
-
+int hand_connectors(vector<string> &s, queue<string> &c);
 
 int main()
 {
@@ -66,11 +66,9 @@ int main()
     parsing(line, v);
     queue<string> co;
     connectors(line, co);
-    if(v.size() == co.size())
-    {
-
-    }
-    execvp_connectors(v[0]);
+    int i = hand_connectors(v, co);
+    if(i == 0)
+      continue;
   }
   return 0;
 }
@@ -207,4 +205,49 @@ int execvp_connectors(string s)
   return 6;
 }
 
+int hand_connectors(vector<string> &v, queue<string> &c)
+{
+  int diff = v.size() - 1;
+  
+  if(v[0] == "exit")
+  {
+    cout << "Thanks for using Rshell" << endl;
+    exit(0);
+  }
 
+  if(v.size() == 1 && c.empty())
+  {
+    int ret = execvp_connectors(v[0]);
+    if(ret == 0)
+      return 0;
+    else
+      return -1;
+  }
+  if(diff != c.size() && c.size() != v.size())
+  {
+    cout << "Please enter an acceptable command" << endl;
+    return -1;
+  }
+  if(v.size()-1 == c.size())
+  {
+    c.push(";");
+  }
+  vector<string>::iterator it = v.begin();
+  while(!c.empty())
+  {
+    string conect = c.front();
+    c.pop();
+    if(*it == "exit")
+    {
+      cout << "Thanks for using Rshell" << endl;
+      exit(0);
+    }
+    else if(conect == ";")
+    {
+      execvp_connectors(*it);
+      ++it;
+    }
+  }
+  
+  return -1;
+}
