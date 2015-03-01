@@ -27,7 +27,7 @@ template <typename T>
 void print(vector<T> &s);
 void connectors(string s, queue<string> &c);
 template <typename T>
-void qprint(queue<T> &c);
+void qprint(queue<T> c);
 void parsing(string s, vector<string> &v);
 template <typename T>
 void cat (vector<T> &s, string cmd);
@@ -74,7 +74,7 @@ int main()
 }
 
 template <typename T>
-void print(vector<T> &s)
+void print(vector<T> s)
 {
   for(size_t i = 0; i < s.size(); ++i)
     cout << "v[" << i << "] =  " << s[i] << endl;  
@@ -99,7 +99,7 @@ void connectors(string s, queue<string> &c)
   }
 }
 template <typename T>
-void qprint(queue<T> &c)
+void qprint(queue<T> c)
 {
   while(!c.empty())
   {
@@ -235,6 +235,7 @@ int hand_connectors(vector<string> &v, queue<string> &c)
   vector<string>::iterator it = v.begin();
   while(!c.empty())
   {
+    //qprint(c);
     string conect = c.front();
     c.pop();
     if(*it == "exit" || *it == " exit")
@@ -244,6 +245,7 @@ int hand_connectors(vector<string> &v, queue<string> &c)
     }
     else if(conect == ";")
     {
+      if(c.empty()) return 0;
       execvp_connectors(*it);
       ++it;
     }
@@ -259,7 +261,22 @@ int hand_connectors(vector<string> &v, queue<string> &c)
     else if(conect == "||")
     {
       int r = execvp_connectors(*it);
-      if(r == 0) return 0;
+      if(r == 0) 
+      {
+        if(c.front() == ";" || c.front() == "&&")
+        {
+          ++it;
+          ++it;
+          if(c.front() == "&&")
+          {
+            c.pop();
+          }
+        }
+        else
+        {
+          return 0; 
+        }
+      }
       else
         ++it;
     }
