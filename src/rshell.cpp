@@ -248,8 +248,8 @@ int hand_connectors(vector<string> &v, queue<string> &c)
     }
     else if(conect == ";")
     {
-      if(c.empty()) return 0;
       execvp_connectors(*it);
+      if(c.empty()) return 0;
       ++it;
     }
     else if(conect == "&&")
