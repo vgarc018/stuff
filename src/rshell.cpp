@@ -194,11 +194,9 @@ int execvp_connectors(string s)
   }
   else
   {
-    size_t size = cmds.size()+1 * sizeof(char*);
-    for(size_t i = 0; i < size; ++i)
-    {
-      free(cm[i]);
-    }
+    for(size_t i = 0; i < cmds.size()+1; ++i)
+        free(cm[i]);
+    free(cm);
     int x;
     if(wait(&x) == -1)
     {
