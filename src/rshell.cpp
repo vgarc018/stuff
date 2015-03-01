@@ -54,9 +54,13 @@ int main()
 
     getline(cin, line);
 
+    if(line[0] == '#') continue;
     size_t comment = line.find("#");
     if(comment != string::npos)
-      line.erase(line.find("#"));
+    {
+      //cout << "in erase" << endl;
+      line.erase(comment);
+    }
     if(line == "exit")
     {
       cout << "Thanks for using Rshell" << endl;
