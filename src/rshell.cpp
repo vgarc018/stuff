@@ -207,7 +207,7 @@ int execvp_connectors(string s)
 
 int hand_connectors(vector<string> &v, queue<string> &c)
 {
-  int diff = v.size() - 1;
+  size_t diff = v.size() - 1;
   
   if(v[0] == "exit")
   {
