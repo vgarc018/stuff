@@ -237,7 +237,7 @@ int hand_connectors(vector<string> &v, queue<string> &c)
   {
     string conect = c.front();
     c.pop();
-    if(*it == "exit")
+    if(*it == "exit" || *it == " exit")
     {
       cout << "Thanks for using Rshell" << endl;
       exit(0);
@@ -246,6 +246,22 @@ int hand_connectors(vector<string> &v, queue<string> &c)
     {
       execvp_connectors(*it);
       ++it;
+    }
+    else if(conect == "&&")
+    {
+      int r = execvp_connectors(*it);
+      if(r != 0) return -1;
+      else
+      {
+        ++it;
+      }
+    }
+    else if(conect == "||")
+    {
+      int r = execvp_connectors(*it);
+      if(r == 0) return 0;
+      else
+        ++it;
     }
   }
   
