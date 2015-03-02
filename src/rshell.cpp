@@ -100,16 +100,18 @@ void print(vector<T> s)
 
 void connectors(string s, queue<string> &c)
 {
-  for(size_t i = 0; i < s.size(); i++)
+  for(size_t i = 0; i < s.size(); ++i)
   {
+    cerr << "in for loop connectors" << endl;
     if(s[i] == '|' && s[i+1] == '|')
     {
       c.push("||");
     }
-    else if(s[i] == '|' && s[i+1] != '|')
-    {
-      c.push("|");
-    }
+    //else if(s[i] == '|' && s[i+1] != '|')
+   // {
+     // c.push("|");
+   // }
+    //cerr << "in the middle" << endl;
     else if(s[i] == '<')
     {
       c.push("<");
@@ -122,6 +124,7 @@ void connectors(string s, queue<string> &c)
     {
       c.push("&&");
     }
+    cerr << "at end" << endl;
   }
 }
 template <typename T>
