@@ -16,6 +16,9 @@
 #include <queue>
 #include <cstdio>
 #include <string.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 
 using namespace std;
 using namespace boost;
@@ -33,6 +36,9 @@ template <typename T>
 void cat (vector<T> &s, string cmd);
 int execvp_connectors(string s);
 int hand_connectors(vector<string> &s, queue<string> &c);
+void inRedir(vector<string> &v);
+void outRedir(vector<string> &v);
+void outRedir2(vector<string> &v);
 
 int main()
 {
@@ -70,9 +76,17 @@ int main()
     parsing(line, v);
     queue<string> co;
     connectors(line, co);
-    int i = hand_connectors(v, co);
-    if(i == 0)
+    if(co.front() == "<" && co.size() == 1)
+    {
+      inRedir(v);
+    }
+    else
+    {
+      cerr << "in else" << endl;
+      int i = hand_connectors(v, co);
+      if(i == 0)
       continue;
+    }
   }
   return 0;
 }
@@ -91,6 +105,14 @@ void connectors(string s, queue<string> &c)
     if(s[i] == '|' && s[i+1] == '|')
     {
       c.push("||");
+    }
+    else if(s[i] == '|' && s[i+1] != '|')
+    {
+      c.push("|");
+    }
+    else if(s[i] == '<')
+    {
+      c.push("<");
     }
     else if(s[i] == ';')
     {
@@ -115,7 +137,7 @@ void qprint(queue<T> c)
 
 void parsing(string s, vector<string> &v)
 {
-  char_separator<char> connector(";||&&");
+  char_separator<char> connector(";||&&<");
   mytok tok (s, connector);
   for(tok_it i = tok.begin(); i != tok.end(); ++i)
   {
@@ -154,7 +176,7 @@ int execvp_connectors(string s)
   mytok cmd_toks(s, space);
   for(tok_it i = cmd_toks.begin(); i != cmd_toks.end(); ++i)
   {
-   cmds.push_back(*i);
+    cmds.push_back(*i);
   }
   cat(paths, cmds[0]);
   sort(paths.begin(), paths.end());
@@ -224,6 +246,7 @@ int hand_connectors(vector<string> &v, queue<string> &c)
 
   if(v.size() == 1 && c.empty())
   {
+    cerr << "in handler" << endl;
     int ret = execvp_connectors(v[0]);
     if(ret == 0)
       return 0;
@@ -291,3 +314,49 @@ int hand_connectors(vector<string> &v, queue<string> &c)
   
   return -1;
 }
+
+
+
+
+
+void inRedir(vector<string> &v)
+{
+  string cmd = v.at(0);
+  string file = v.at(1);
+  int infd = open(file.c_str(), O_RDONLY);
+  if(infd == -1)
+    perror("Error opening");
+
+  int savedIn = dup(STDIN_FILENO);
+  if(savedIn == -1)
+    perror("Error in dup");
+
+  if(dup2(infd, STDIN_FILENO) == -1)
+    perror("error in dup2");
+
+  if(close(infd) == -1)
+    perror("Error Closing fd");
+  
+  string command = v.at(0) + " " + v.at(1);
+
+  execvp_connectors(command);
+  
+  if(dup2(savedIn, STDIN_FILENO) == -1)
+    perror("Error in Dup2");
+
+  if(close(savedIn) == -1)
+    perror("Error in closing Fd");
+
+}
+void outRedir(vector<string> &v)
+{
+
+}
+void outRedir2(vector<string> &v)
+{
+
+}
+
+
+
+
