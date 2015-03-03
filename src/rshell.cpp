@@ -516,9 +516,9 @@ void piping(vector<string> &v, queue<string> &c)
       perror("error in pipe");
     
     size_t pid = fork();
+    size_t q = -1;    
     
-    
-    if(pid == -1)
+    if(pid == q)
       perror("Error in fork");
     if(pid == 0)
     {
@@ -559,8 +559,8 @@ void piping(vector<string> &v, queue<string> &c)
     perror("Error in pipe");
 
   size_t pid = fork();
-
-  if(pid == -1)
+  size_t q = -1;
+  if(pid == q)
     perror("Error in fork");
 
   if(pid == 0)
