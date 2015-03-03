@@ -18,6 +18,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <boost/algorithm/string/trim_all.hpp>
 
 
 using namespace std;
@@ -27,7 +28,7 @@ typedef tokenizer<char_separator<char> > mytok;
 typedef mytok::iterator tok_it;
 
 template <typename T>
-void print(vector<T> &s);
+void vec_print(vector<T> &s);
 void connectors(string s, queue<string> &c);
 template <typename T>
 void qprint(queue<T> c);
@@ -39,6 +40,10 @@ int hand_connectors(vector<string> &s, queue<string> &c);
 void inRedir(vector<string> &v);
 void outRedir(vector<string> &v);
 void outRedir2(vector<string> &v);
+void removeWhite(vector<string> &v);
+void piping(vector<string> &v, queue<string> &c);
+int inRedirPiping(string s);
+
 
 int main()
 {
@@ -76,33 +81,71 @@ int main()
     parsing(line, v);
     queue<string> co;
     connectors(line, co);
-    if(co.front() == "<" && co.size() == 1)
+    removeWhite(v);
+    //qprint(co);
+    //vec_print(v);
+    size_t input = line.find("<");
+    size_t out = line.find(">");
+    size_t p = line.find("|");
+    size_t l = string::npos;
+    if(p != l && line[p+1] != '|')
+    {
+      piping(v, co);
+      continue;
+    }
+    else if(input != l)
     {
       inRedir(v);
+      continue;
+    }
+    else if(out != l && (line[out+1] != '>'))
+    {
+      outRedir(v);
+      continue;
+    }
+    else if(out != l)
+    {
+      outRedir2(v);
+      continue;
     }
     else
     {
-      cerr << "in else" << endl;
       int i = hand_connectors(v, co);
       if(i == 0)
-      continue;
+        continue;
     }
   }
   return 0;
 }
 
+/*
+ * Function to reomove the white space from every token
+ * in the tokens vector so that when you put it into the 
+ * function you wont get any error
+ */
+void removeWhite(vector<string> &v)
+{
+  for(size_t i = 0; i < v.size(); ++i)
+    trim_all(v[i]);
+  //vec_print(v);
+}
+
+/* Simple function to print the constents of a
+ * vector type
+ */
 template <typename T>
-void print(vector<T> s)
+void vec_print(vector<T> &s)
 {
   for(size_t i = 0; i < s.size(); ++i)
     cout << "v[" << i << "] =  " << s[i] << endl;  
 }
 
+/*function that goes through a string and searched for any connectors
+ */ 
 void connectors(string s, queue<string> &c)
 {
-  for(size_t i = 0; i < s.size(); ++i)
+  for(size_t i = 0; i < s.size(); i++)
   {
-    cerr << "in for loop connectors" << endl;
     if(s[i] == '|' && s[i+1] == '|')
     {
       c.push("||");
@@ -113,7 +156,20 @@ void connectors(string s, queue<string> &c)
     }
     else if(s[i] == '<')
     {
+      //cout << "in the queue" << endl;
       c.push("<");
+    }
+    else if(s[i] == '>' && s[i+1] != '>' && s[i-1] != '>')
+    {
+      c.push(">");
+    }
+    else if(s[i] == '>' && s[i+1] == '>')
+    {
+      c.push(">>");
+    }
+    else if(s[i] == '|' && s[i+1] != '|')
+    {
+      c.push("|");
     }
     else if(s[i] == ';')
     {
@@ -123,7 +179,6 @@ void connectors(string s, queue<string> &c)
     {
       c.push("&&");
     }
-    cerr << "at end" << endl;
   }
 }
 template <typename T>
@@ -139,7 +194,7 @@ void qprint(queue<T> c)
 
 void parsing(string s, vector<string> &v)
 {
-  char_separator<char> connector(";||&&<");
+  char_separator<char> connector(";||&&<>");
   mytok tok (s, connector);
   for(tok_it i = tok.begin(); i != tok.end(); ++i)
   {
@@ -178,7 +233,7 @@ int execvp_connectors(string s)
   mytok cmd_toks(s, space);
   for(tok_it i = cmd_toks.begin(); i != cmd_toks.end(); ++i)
   {
-    cmds.push_back(*i);
+   cmds.push_back(*i);
   }
   cat(paths, cmds[0]);
   sort(paths.begin(), paths.end());
@@ -248,7 +303,6 @@ int hand_connectors(vector<string> &v, queue<string> &c)
 
   if(v.size() == 1 && c.empty())
   {
-    cerr << "in handler" << endl;
     int ret = execvp_connectors(v[0]);
     if(ret == 0)
       return 0;
@@ -317,19 +371,19 @@ int hand_connectors(vector<string> &v, queue<string> &c)
   return -1;
 }
 
-
-
-
-
 void inRedir(vector<string> &v)
 {
   string cmd = v.at(0);
   string file = v.at(1);
+  //cout << file << endl;
   int infd = open(file.c_str(), O_RDONLY);
   if(infd == -1)
+  { 
     perror("Error opening");
+    return;
+  }
 
-  int savedIn = dup(STDIN_FILENO);
+   int savedIn = dup(STDIN_FILENO);
   if(savedIn == -1)
     perror("Error in dup");
 
@@ -339,10 +393,9 @@ void inRedir(vector<string> &v)
   if(close(infd) == -1)
     perror("Error Closing fd");
   
-  string command = v.at(0) + " " + v.at(1);
+  string command = v.at(0);
 
   execvp_connectors(command);
-  
   if(dup2(savedIn, STDIN_FILENO) == -1)
     perror("Error in Dup2");
 
@@ -350,15 +403,183 @@ void inRedir(vector<string> &v)
     perror("Error in closing Fd");
 
 }
+
 void outRedir(vector<string> &v)
 {
+  string cmd = v.at(0);
+  string file = v.at(1);
+
+  int in = open(file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+  if(in == -1)
+  {  
+    perror("Error in Opening");
+    return;
+  }
+  
+  int savedOut = dup(STDOUT_FILENO);
+  if(savedOut == -1)
+    perror("Error in dup");
+
+  if(dup2(in, STDOUT_FILENO) == -1)
+  { 
+    perror("Error in Dup2");
+    return;
+  }
+
+  if(close(in) == -1)
+    perror("Closing fd");
+
+  execvp_connectors(cmd);
+
+  if(dup2(savedOut, STDOUT_FILENO) == -1)
+    perror("Error in Dup2");
+
+  if(close(savedOut) == -1)
+    perror("Error Closing file");
 
 }
+
 void outRedir2(vector<string> &v)
 {
+  string cmd = v.at(0);
+  string file = v.at(1);
 
+  int in = open(file.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0666);
+  if(in == -1)
+  {  
+    perror("Error in Opening");
+    return;
+  }
+  
+  int savedOut = dup(STDOUT_FILENO);
+  if(savedOut == -1)
+    perror("Error in dup");
+
+  if(dup2(in, STDOUT_FILENO) == -1)
+  { 
+    perror("Error in Dup2");
+    return;
+  }
+
+  if(close(in) == -1)
+    perror("Closing fd");
+
+  execvp_connectors(cmd);
+
+  if(dup2(savedOut, STDOUT_FILENO) == -1)
+    perror("Error in Dup2");
+
+  if(close(savedOut) == -1)
+    perror("Error Closing file");
+
+} 
+
+int inRedirPiping(string s)
+{
+  int infd = open(s.c_str(), O_RDONLY);
+  if(infd == -1)
+  { 
+    perror("Error opening");
+    return -1;
+  }
+  return infd;
 }
 
+void piping(vector<string> &v, queue<string> &c)
+{
+  int savedIn = dup(STDIN_FILENO);
+  if(savedIn == -1)
+    perror("error in dup");
+  int savedOut = dup(STDOUT_FILENO);
+  if(savedOut == -1)
+    perror("Error in dup");
+  string top = c.front();
+  int in;
+  if(top == "<")
+    in = inRedirPiping(v.at(1));
+  else
+    in = STDIN_FILENO;
+  
+  
+//  if()
+  if(in == -1)
+    return;
+
+  int fd[2];
+  size_t i;
+  for(i = 0; i < v.size()-1; ++i)
+  {
+    if(pipe(fd) == -1)
+      perror("error in pipe");
+    
+    size_t pid = fork();
+    
+    
+    if(pid == -1)
+      perror("Error in fork");
+    if(pid == 0)
+    {
+      if(in != STDIN_FILENO)
+      {
+      
+        if(dup2(in, STDIN_FILENO) == -1)
+          perror("Error in Dup2");
+      
+        if(close(in) == -1)
+          perror("Error in Close");
+
+      }
+      if(dup2(fd[1], 1) == -1)
+        perror("Error in dup2");
+
+      if(close(fd[1]) == -1)
+        perror("Error in Close");
+      execvp_connectors(v.at(i));
+    }
+    else
+    {
+     if(close(fd[1]) == -1)
+       perror("error in close");
+
+     in = fd[0];
+    }
+  }
+
+  if(dup2(in, 0) == -1)
+    perror("error in dup2");
+
+  if(pipe(fd) == -1)
+    perror("Error in pipe");
+
+  size_t pid = fork();
+
+  if(pid == -1)
+    perror("Error in fork");
+
+  if(pid == 0)
+  {
+    execvp_connectors(v.at(v.size()-2));
+  }
+  else
+  {
+    int x;
+    if(wait(&x) == -1)
+      perror("error in wait");
+
+    if(dup2(savedOut, STDOUT_FILENO) == -1)
+      perror("Error in Dup2");
+
+    if(dup2(savedIn, STDIN_FILENO) == -1)
+      perror("Error in Dup2");
+
+    if(close(savedOut) == -1)
+      perror("Error Closing file");
+
+    if(close(savedIn) == -1)
+      perror("Error Closing file");
 
 
 
+
+  }
+}
