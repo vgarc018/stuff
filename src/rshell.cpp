@@ -107,11 +107,10 @@ void connectors(string s, queue<string> &c)
     {
       c.push("||");
     }
-    //else if(s[i] == '|' && s[i+1] != '|')
-   // {
-     // c.push("|");
-   // }
-    //cerr << "in the middle" << endl;
+    else if(s[i] == '|' && s[i+1] != '|')
+    {
+      c.push("|");
+    }
     else if(s[i] == '<')
     {
       c.push("<");
