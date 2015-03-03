@@ -500,15 +500,18 @@ void piping(vector<string> &v, queue<string> &c)
   else
     in = STDIN_FILENO;
   
-  
+  v.erase(v.begin()+1);
 //  if()
   if(in == -1)
     return;
-
+  
+ // vec_print(v);
+  
   int fd[2];
   size_t i;
   for(i = 0; i < v.size()-1; ++i)
   {
+    cerr << "v[ " << i << " ]" << " = " << v[i] << endl;
     if(pipe(fd) == -1)
       perror("error in pipe");
     
@@ -523,8 +526,10 @@ void piping(vector<string> &v, queue<string> &c)
       {
       
         if(dup2(in, STDIN_FILENO) == -1)
-          perror("Error in Dup2");
-      
+        {
+          perror("Error in Dup2 1");
+          return;
+        }
         if(close(in) == -1)
           perror("Error in Close");
 
@@ -534,19 +539,21 @@ void piping(vector<string> &v, queue<string> &c)
 
       if(close(fd[1]) == -1)
         perror("Error in Close");
-      execvp_connectors(v.at(i));
+       execvp_connectors(v.at(i));
     }
     else
     {
      if(close(fd[1]) == -1)
        perror("error in close");
-
+     cerr  << "fd[0] ==  " <<  fd[0] << endl; 
      in = fd[0];
+  cerr << " in before end loop" << in << endl;
     }
   }
 
+  cerr << "in == " << in << endl;
   if(dup2(in, 0) == -1)
-    perror("error in dup2");
+    perror("error in dup2 2");
 
   if(pipe(fd) == -1)
     perror("Error in pipe");
@@ -558,7 +565,7 @@ void piping(vector<string> &v, queue<string> &c)
 
   if(pid == 0)
   {
-    execvp_connectors(v.at(v.size()-2));
+    execvp_connectors(v.at(v.size() - 1));;
   }
   else
   {
@@ -582,4 +589,5 @@ void piping(vector<string> &v, queue<string> &c)
 
 
   }
+
 }
