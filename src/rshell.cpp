@@ -43,7 +43,8 @@ void outRedir2(vector<string> &v);
 void removeWhite(vector<string> &v);
 void piping(vector<string> &v, queue<string> &c);
 int inRedirPiping(string s);
-
+int outRedirPiping(string s);
+int outRedir2Piping(string s);
 
 int main()
 {
@@ -485,6 +486,28 @@ int inRedirPiping(string s)
   return infd;
 }
 
+int outRedirPiping(string s)
+{
+  int in = open(s.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+  if(in == -1)
+  {  
+    perror("Error in Opening");
+    return -1;
+  }
+  return in; 
+}
+
+int outRedir2Piping(string s)
+{
+  int in = open(s.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0666);
+  if(in == -1)
+  {  
+    perror("Error in Opening");
+    return -1;
+  }
+  return in;  
+}
+
 void piping(vector<string> &v, queue<string> &c)
 {
   int savedIn = dup(STDIN_FILENO);
@@ -496,16 +519,30 @@ void piping(vector<string> &v, queue<string> &c)
   string top = c.front();
   int in;
   if(top == "<")
+  {
     in = inRedirPiping(v.at(1));
+    v.erase(v.begin() +1);
+  }
   else
     in = STDIN_FILENO;
-  
-  v.erase(v.begin()+1);
-//  if()
+
   if(in == -1)
     return;
   
- // vec_print(v);
+  int output;
+  if(c.back() == ">")
+  {
+    output = outRedirPiping(v[v.size()-1]);
+    v.pop_back();
+  }
+  else if(c.back() == ">>")
+  { 
+    output = outRedir2Piping(v[v.size()-1]);
+    v.pop_back();
+  }
+  else
+    output = STDOUT_FILENO;
+  
   
   int fd[2];
   size_t i;
@@ -540,23 +577,28 @@ void piping(vector<string> &v, queue<string> &c)
       if(close(fd[1]) == -1)
         perror("Error in Close");
        execvp_connectors(v.at(i));
+      exit(1);
     }
     else
     {
-     if(close(fd[1]) == -1)
+     // int x;
+     // if(wait(&x) == -1)
+       // perror("Error in wait");
+      if(close(fd[1]) == -1)
        perror("error in close");
-     cerr  << "fd[0] ==  " <<  fd[0] << endl; 
-     in = fd[0];
-  cerr << " in before end loop" << in << endl;
+      //cerr  << "fd[0] ==  " <<  fd[0] << endl; 
+      in = fd[0];
+    //  backup = fd[0];
+   //   cerr << " in before end loop" << in << endl;
     }
   }
 
-  cerr << "in == " << in << endl;
-  if(dup2(in, 0) == -1)
+  //cerr << "in == " << in << endl;
+  if(dup2(in, STDIN_FILENO) == -1)
     perror("error in dup2 2");
-
-  if(pipe(fd) == -1)
-    perror("Error in pipe");
+// cerr << "after fork" << endl;
+ // if(pipe(fd) == -1)
+   // perror("Error in pipe");
 
   size_t pid = fork();
   size_t q = -1;
@@ -565,7 +607,10 @@ void piping(vector<string> &v, queue<string> &c)
 
   if(pid == 0)
   {
-    execvp_connectors(v.at(v.size() - 1));;
+    //if(dup2())
+    execvp_connectors(v.at(v.size() - 1));
+
+    exit(1);
   }
   else
   {
@@ -573,10 +618,10 @@ void piping(vector<string> &v, queue<string> &c)
     if(wait(&x) == -1)
       perror("error in wait");
 
-    if(dup2(savedOut, STDOUT_FILENO) == -1)
+    if(dup2(savedOut, 1) == -1)
       perror("Error in Dup2");
 
-    if(dup2(savedIn, STDIN_FILENO) == -1)
+    if(dup2(savedIn, 0) == -1)
       perror("Error in Dup2");
 
     if(close(savedOut) == -1)
@@ -585,8 +630,8 @@ void piping(vector<string> &v, queue<string> &c)
     if(close(savedIn) == -1)
       perror("Error Closing file");
 
-
-
+  cout << "after restoring everything" << endl;
+  cout.flush();
 
   }
 
