@@ -89,6 +89,9 @@ int main()
     size_t out = line.find(">");
     size_t p = line.find("|");
     size_t l = string::npos;
+    size_t semi = line.find(";");
+    size_t orr = line.find("||");
+    size_t andd = line.find("&&");
     if(p != l && line[p+1] != '|')
     {
       piping(v, co);
@@ -109,7 +112,7 @@ int main()
       outRedir2(v);
       continue;
     }
-    else
+    else if(semi != l || orr != l || andd != l || !v.empty())
     {
       int i = hand_connectors(v, co);
       if(i == 0)
@@ -513,7 +516,7 @@ void piping(vector<string> &v, queue<string> &c)
   int savedIn = dup(STDIN_FILENO);
   if(savedIn == -1)
     perror("error in dup");
-  int savedOut = dup(STDOUT_FILENO);
+  int savedOut = dup(0);
   if(savedOut == -1)
     perror("Error in dup");
   string top = c.front();
@@ -529,6 +532,7 @@ void piping(vector<string> &v, queue<string> &c)
   if(in == -1)
     return;
   
+  cout << "back vec " << v[v.size()-1] << endl;
   int output;
   if(c.back() == ">")
   {
@@ -548,7 +552,6 @@ void piping(vector<string> &v, queue<string> &c)
   size_t i;
   for(i = 0; i < v.size()-1; ++i)
   {
-    cerr << "v[ " << i << " ]" << " = " << v[i] << endl;
     if(pipe(fd) == -1)
       perror("error in pipe");
     
@@ -581,24 +584,14 @@ void piping(vector<string> &v, queue<string> &c)
     }
     else
     {
-     // int x;
-     // if(wait(&x) == -1)
-       // perror("Error in wait");
       if(close(fd[1]) == -1)
        perror("error in close");
-      //cerr  << "fd[0] ==  " <<  fd[0] << endl; 
       in = fd[0];
-    //  backup = fd[0];
-   //   cerr << " in before end loop" << in << endl;
     }
   }
 
-  //cerr << "in == " << in << endl;
   if(dup2(in, STDIN_FILENO) == -1)
     perror("error in dup2 2");
-// cerr << "after fork" << endl;
- // if(pipe(fd) == -1)
-   // perror("Error in pipe");
 
   size_t pid = fork();
   size_t q = -1;
@@ -607,9 +600,20 @@ void piping(vector<string> &v, queue<string> &c)
 
   if(pid == 0)
   {
-    //if(dup2())
+    if(output != STDOUT_FILENO)
+    {  
+      if(dup2(output, 1) == -1)
+         perror("Error in dup2 3");
+    
+      if(close(output) == -1)
+        perror("Error in closing fd");
+    }
+    else
+    {
+      if(dup2(savedOut, STDOUT_FILENO) == -1)
+        perror("Error in dup2");
+    }
     execvp_connectors(v.at(v.size() - 1));
-
     exit(1);
   }
   else
