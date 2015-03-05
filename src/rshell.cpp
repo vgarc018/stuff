@@ -672,6 +672,7 @@ void piping(vector<string> &v, queue<string> &c)
   {
     if(waitpid(pid, NULL, 0) == -1)
       perror("error in wait");
+    exit(1);
   }
  
   if(dup2(savedOut, 1) == -1)
