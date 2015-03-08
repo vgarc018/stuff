@@ -19,6 +19,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <ostream>
+#include <signal.h>
 
 using namespace std;
 using namespace boost;
@@ -28,6 +29,8 @@ typedef mytok::iterator tok_it;
 
 template <typename T>
 void vec_print(vector<T> &s);
+
+void sig_handler(int signum);
 void connectors(string s, queue<string> &c);
 template <typename T>
 void qprint(queue<T> c);
@@ -44,14 +47,18 @@ void piping(vector<string> &v, queue<string> &c);
 int inRedirPiping(string s);
 int outRedirPiping(string s);
 int outRedir2Piping(string s);
-
-
 static inline std::string &rtrim(std::string &s);
 static inline std::string &ltrim(std::string &s);
 static inline std::string &trim(std::string &s);
 
 int main()
 {
+
+
+
+  if( signal(SIGINT, SIG_IGN) == SIG_ERR )
+      perror("Signal Error");
+
   string line;
   while(1)
   {
@@ -129,6 +136,16 @@ int main()
   return 0;
 }
 
+
+void sig_handler(int signum)
+{
+    int pid = getpid();
+    if(kill(pid, signum) == -1)
+    {
+        perror("Error in kill");
+        exit(0);
+    }
+}
 // trim from start
 static inline std::string &ltrim(std::string &s)
 {
@@ -322,6 +339,8 @@ int execvp_connectors(string s)
   }
   if(pid == 0)
   {
+      if(signal(SIGINT, sig_handler) == SIG_ERR)
+          perror("Signal");
       int exec;
       for(size_t i = 0; i < paths.size(); ++i)
       {
@@ -345,6 +364,9 @@ int execvp_connectors(string s)
       perror("Error in wait");
       exit(1);
     }
+    if(signal(SIGINT, SIG_IGN) == SIG_ERR)
+        perror("signal error");
+
     return x;
   }
   return 6;
