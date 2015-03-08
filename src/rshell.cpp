@@ -44,9 +44,11 @@ void piping(vector<string> &v, queue<string> &c);
 int inRedirPiping(string s);
 int outRedirPiping(string s);
 int outRedir2Piping(string s);
+
+
 static inline std::string &rtrim(std::string &s);
-static inline std::string &ltrim(std::string &s); 
-static inline std::string &trim(std::string &s); 
+static inline std::string &ltrim(std::string &s);
+static inline std::string &trim(std::string &s);
 
 int main()
 {
@@ -64,7 +66,7 @@ int main()
     if(gethostname(host, 200) == -1) perror("hostname");
 
     cout << dir << endl;
-    if(login) 
+    if(login)
       cout << login << "@" << host << "$ ";
     else
       cout << "$ ";
@@ -128,17 +130,17 @@ int main()
 }
 
 // trim from start
-static inline std::string &ltrim(std::string &s) 
+static inline std::string &ltrim(std::string &s)
 {
   s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
   return s;
 }
-static inline std::string &rtrim(std::string &s) 
+static inline std::string &rtrim(std::string &s)
 {
   s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
   return s;
 }
-static inline std::string &trim(std::string &s) 
+static inline std::string &trim(std::string &s)
 {
   return ltrim(rtrim(s));
 }
@@ -146,14 +148,14 @@ static inline std::string &trim(std::string &s)
 
 /*
  * Function to reomove the white space from every token
- * in the tokens vector so that when you put it into the 
+ * in the tokens vector so that when you put it into the
  * function you wont get any error
  */
 void removeWhite(vector<string> &v)
 {
   for(size_t i = 0; i < v.size(); ++i)
     trim(v[i]);
-} 
+}
 
 /* Simple function to print the constents of a
  * vector type
@@ -162,11 +164,11 @@ template <typename T>
 void vec_print(vector<T> &s)
 {
   for(size_t i = 0; i < s.size(); ++i)
-    cout << "v[" << i << "] =  " << s[i] << endl;  
+    cout << "v[" << i << "] =  " << s[i] << endl;
 }
 
 /*function that goes through a string and searched for any connectors
- */ 
+ */
 void connectors(string s, queue<string> &c)
 {
   for(size_t i = 0; i < s.size(); i++)
@@ -248,7 +250,7 @@ int execvp_connectors(string s)
 
   char dir[1000];
   if(!getcwd(dir,1000)) perror("error in getwcd");
-  
+
   string path_str(path);
   char_separator<char> colon(":");
   mytok tok (path_str, colon);
@@ -273,7 +275,7 @@ int execvp_connectors(string s)
     if(cmds.size() == 1)
     {
       const char *home_name = "HOME";
-      char *home = getenv(home_name); 
+      char *home = getenv(home_name);
       //cout << home << endl;
        int i = chdir(home);
       if(i == -1)
@@ -298,7 +300,7 @@ int execvp_connectors(string s)
   //cmds.erase(cmds.begin());
  // print(cmds);
  // print(paths);
-  
+
   char **cm = (char**) malloc((cmds.size()+1) * sizeof(char*));
   if(cmds.size() != 0)
   {
@@ -323,7 +325,7 @@ int execvp_connectors(string s)
       int exec;
       for(size_t i = 0; i < paths.size(); ++i)
       {
-        
+
         exec = execv(paths[i].c_str(), cm);
       }
       if(exec == -1)
@@ -351,7 +353,7 @@ int execvp_connectors(string s)
 int hand_connectors(vector<string> &v, queue<string> &c)
 {
   size_t diff = v.size() - 1;
- 
+
   if(v[0] == "exit")
   {
     cout << "Thanks for using Rshell" << endl;
@@ -404,7 +406,7 @@ int hand_connectors(vector<string> &v, queue<string> &c)
     else if(conect == "||")
     {
       int r = execvp_connectors(*it);
-      if(r == 0) 
+      if(r == 0)
       {
         if(c.front() == ";" || c.front() == "&&")
         {
@@ -417,14 +419,14 @@ int hand_connectors(vector<string> &v, queue<string> &c)
         }
         else
         {
-          return 0; 
+          return 0;
         }
       }
       else
         ++it;
     }
   }
-  
+
   return -1;
 }
 
@@ -435,7 +437,7 @@ void inRedir(vector<string> &v)
   //cout << file << endl;
   int infd = open(file.c_str(), O_RDONLY);
   if(infd == -1)
-  { 
+  {
     perror("Error opening");
     return;
   }
@@ -449,7 +451,7 @@ void inRedir(vector<string> &v)
 
   if(close(infd) == -1)
     perror("Error Closing fd");
-  
+
   string command = v.at(0);
 
   execvp_connectors(command);
@@ -468,17 +470,17 @@ void outRedir(vector<string> &v)
 
   int in = open(file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
   if(in == -1)
-  {  
+  {
     perror("Error in Opening");
     return;
   }
-  
+
   int savedOut = dup(STDOUT_FILENO);
   if(savedOut == -1)
     perror("Error in dup");
 
   if(dup2(in, STDOUT_FILENO) == -1)
-  { 
+  {
     perror("Error in Dup2");
     return;
   }
@@ -503,17 +505,17 @@ void outRedir2(vector<string> &v)
 
   int in = open(file.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0666);
   if(in == -1)
-  {  
+  {
     perror("Error in Opening");
     return;
   }
-  
+
   int savedOut = dup(STDOUT_FILENO);
   if(savedOut == -1)
     perror("Error in dup");
 
   if(dup2(in, STDOUT_FILENO) == -1)
-  { 
+  {
     perror("Error in Dup2");
     return;
   }
@@ -529,13 +531,13 @@ void outRedir2(vector<string> &v)
   if(close(savedOut) == -1)
     perror("Error Closing file");
 
-} 
+}
 
 int inRedirPiping(string s)
 {
   int infd = open(s.c_str(), O_RDONLY);
   if(infd == -1)
-  { 
+  {
     perror("Error opening");
     return -1;
   }
@@ -546,22 +548,22 @@ int outRedirPiping(string s)
 {
   int in = open(s.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
   if(in == -1)
-  {  
+  {
     perror("Error in Opening");
     return -1;
   }
-  return in; 
+  return in;
 }
 
 int outRedir2Piping(string s)
 {
   int in = open(s.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0666);
   if(in == -1)
-  {  
+  {
     perror("Error in Opening");
     return -1;
   }
-  return in;  
+  return in;
 }
 
 void piping(vector<string> &v, queue<string> &c)
@@ -584,7 +586,7 @@ void piping(vector<string> &v, queue<string> &c)
 
   if(in == -1)
     return;
-  
+
   int output;
   if(c.back() == ">")
   {
@@ -592,31 +594,31 @@ void piping(vector<string> &v, queue<string> &c)
     v.pop_back();
   }
   else if(c.back() == ">>")
-  { 
+  {
     output = outRedir2Piping(v[v.size()-1]);
     v.pop_back();
   }
   else
     output = 1;
-  
-  
+
+
   int fd[2];
   size_t i;
   for(i = 0; i < v.size()-1; ++i)
   {
     if(pipe(fd) == -1)
       perror("error in pipe");
-    
+
     size_t pid = fork();
-    size_t q = -1;    
-    
+    size_t q = -1;
+
     if(pid == q)
       perror("Error in fork");
     if(pid == 0)
     {
       if(in != 0)
       {
-      
+
         if(dup2(in, 0) == -1)
         {
           perror("Error in Dup2 1");
@@ -653,10 +655,10 @@ void piping(vector<string> &v, queue<string> &c)
   if(pid == 0)
   {
     if(output != STDOUT_FILENO)
-    {  
+    {
       if(dup2(output, 1) == -1)
          perror("Error in dup2 3");
-    
+
       if(close(output) == -1)
         perror("Error in closing fd");
     }
@@ -674,10 +676,10 @@ void piping(vector<string> &v, queue<string> &c)
       perror("error in wait");
     exit(1);
   }
- 
+
   if(dup2(savedOut, 1) == -1)
     perror("Error in Dup2");
-  
+
   if(dup2(savedIn, 0) == -1)
     perror("Error in Dup2");
 
